@@ -2,6 +2,7 @@
 package org.usfirst.frc.team4496.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.command.Command;
@@ -28,10 +29,10 @@ public class Robot extends IterativeRobot {
 		Solenoid grabberArm;
 		Compressor mainCompressor;
 		RobotDrive mainDrive, testDrive;
-		Victor liftDrive, catDrive;
+		Victor liftDrive, launchDrive;
 		Command autoMode;
 		SendableChooser autoChooser;
-		Timer timArm, timArmAlt;
+		Timer timArm, timArmAlt, timLaunch, timLaunchAlt;
 
 	    /**
 	     * This function is run when the robot is first started up and should be
@@ -44,6 +45,7 @@ public class Robot extends IterativeRobot {
         mainDrive.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         mainDrive.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
         liftDrive = new Victor(4);
+        launchDrive = new Victor(5);
         
         //Add the defense choices to the Smart Dash-board
         autoChooser = new SendableChooser();
@@ -61,6 +63,8 @@ public class Robot extends IterativeRobot {
         //Create the timers used in the grabber arm
         timArm = new Timer();
         timArmAlt = new Timer();
+        timLaunch = new Timer();
+        timLaunchAlt = new Timer();
         
         //Pnumatics declarations
         mainCompressor = new Compressor();
@@ -108,13 +112,11 @@ public class Robot extends IterativeRobot {
     public void teleopInit() {
     	//Start the timers used for the grabber and start the fly wheels
     	timArmAlt.start();
-    	catDrive.set(1);
     }
 
     /**
      * This function is called periodically during operator control
      */
-    @SuppressWarnings("deprecation")
 	public void teleopPeriodic() {
         Scheduler.getInstance().run();
         //Main drive setup
@@ -128,7 +130,7 @@ public class Robot extends IterativeRobot {
         double rYVal = OI.controller.getRawAxis(5);
         
         //Slowing the drive by the triggers
-        double sumTriggerValue = (lTVal + rTVal + 1) * 20;
+        double sumTriggerValue = lTVal * 80;
         
         //Round and process the input 
         double rotDrv = ((double)((int)(lXVal  * 10)) ) / sumTriggerValue;
@@ -141,14 +143,32 @@ public class Robot extends IterativeRobot {
         double sldDrv = ((double)((int)(rXVal  * 10)) ) / sumTriggerValue;
         
         //SmartDashboard output
-        SmartDashboard.putDouble("Rotational Drive Value", rotDrv);
-        SmartDashboard.putDouble("Forward Drive Value", fwdDrv);
-        SmartDashboard.putDouble("Sliding Drive Value", sldDrv);
-        SmartDashboard.putInt("POV Value", OI.controller.getPOV());
+        SmartDashboard.putNumber("Rotational Drive Value", rotDrv);
+        SmartDashboard.putNumber("Forward Drive Value", fwdDrv);
+        SmartDashboard.putNumber("Sliding Drive Value", sldDrv);
+        SmartDashboard.putNumber("POV Value", OI.controller.getPOV());
+        SmartDashboard.putNumber("Sliding Drive Value", rTVal);
         SmartDashboard.putBoolean("Compressor Status", !mainCompressor.getPressureSwitchValue());
         
         //Main drive controls
         mainDrive.mecanumDrive_Cartesian(rotDrv, fwdDrv, sldDrv, 0);
+        
+        //Launcher Rev-Up/Launch
+        if (OI.controller.getRawButton(0) && timLaunch.get() == 0 && timLaunchAlt.get() >= 1) {
+        	timLaunch.start();
+        	timLaunchAlt.stop();
+        	timLaunchAlt.reset();
+        	launchDrive.set(rTVal);
+        	OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) rTVal);
+        	OI.controller.setRumble(Joystick.RumbleType.kRightRumble, (float) rTVal);
+        	SmartDashboard.putString("Launch Mode", "Rev-Up");
+        } else if(OI.controller.getRawButton(0) && timLaunch.get() >= 1 && timLaunchAlt.get() == 0) {
+        	timLaunch.stop();
+        	timLaunchAlt.start();
+        	timLaunch.reset();
+        	launchDrive.set(1);
+        	SmartDashboard.putString("Launch Mode", "Max Speed");
+        }
         
         //Compressor controls
         if(!mainCompressor.getPressureSwitchValue()){
