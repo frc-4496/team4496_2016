@@ -182,6 +182,8 @@ public class Robot extends IterativeRobot {
         }
         */
         launchDrive.set(-rTVal);
+        OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) rTVal);
+    	OI.controller.setRumble(Joystick.RumbleType.kRightRumble, (float) rTVal);
         
         //Compressor controls
         if(!mainCompressor.getPressureSwitchValue()){
