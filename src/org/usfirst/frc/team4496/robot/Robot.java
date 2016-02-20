@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.Timer;
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
  * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the manifest file in the resource
+ * creating this project, you must also update the manifest file in the resource 
  * directory.
  */
 public class Robot extends IterativeRobot {
@@ -111,7 +111,12 @@ public class Robot extends IterativeRobot {
 
     public void teleopInit() {
     	//Start the timers used for the grabber and start the fly wheels
+    	timArm.stop();
     	timArmAlt.start();
+    	timArm.reset();
+    	timLaunch.stop();
+    	timLaunchAlt.start();
+    	timLaunch.reset();
     }
 
     /**
@@ -130,45 +135,53 @@ public class Robot extends IterativeRobot {
         double rYVal = OI.controller.getRawAxis(5);
         
         //Slowing the drive by the triggers
-        double sumTriggerValue = lTVal * 80;
+        double sumTriggerValue = 20;
         
         //Round and process the input 
         double rotDrv = ((double)((int)(lXVal  * 10)) ) / sumTriggerValue;
-        double fwdDrv;
-        if (Math.abs(lYVal) >= Math.abs(rYVal)) {
-        	fwdDrv = ((double)((int)(lYVal * 10)) ) / sumTriggerValue;
-        } else {
-        	fwdDrv = ((double)((int)(rYVal * 10)) ) / sumTriggerValue;
-        }
+        double fwdDrv = ((double)((int)(lYVal * 10)) ) / sumTriggerValue;
         double sldDrv = ((double)((int)(rXVal  * 10)) ) / sumTriggerValue;
         
         //SmartDashboard output
         SmartDashboard.putNumber("Rotational Drive Value", rotDrv);
         SmartDashboard.putNumber("Forward Drive Value", fwdDrv);
         SmartDashboard.putNumber("Sliding Drive Value", sldDrv);
+        SmartDashboard.putNumber("Launcher Timer", timLaunch.get());
+        SmartDashboard.putNumber("Alt Launcher Timer", rotDrv);
         SmartDashboard.putNumber("POV Value", OI.controller.getPOV());
         SmartDashboard.putNumber("Sliding Drive Value", rTVal);
         SmartDashboard.putBoolean("Compressor Status", !mainCompressor.getPressureSwitchValue());
         
         //Main drive controls
         mainDrive.mecanumDrive_Cartesian(rotDrv, fwdDrv, sldDrv, 0);
+        //mainDrive.arcadeDrive(fwdDrv, rotDrv);
         
         //Launcher Rev-Up/Launch
-        if (OI.controller.getRawButton(0) && timLaunch.get() == 0 && timLaunchAlt.get() >= 1) {
+        /*
+        boolean mode = false;
+        SmartDashboard.putNumber("Launch Value", rTVal);
+        if (OI.controller.getRawButton(1) && timLaunch.get() == 0 && timLaunchAlt.get() >= 1) {
         	timLaunch.start();
         	timLaunchAlt.stop();
         	timLaunchAlt.reset();
-        	launchDrive.set(rTVal);
-        	OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) rTVal);
-        	OI.controller.setRumble(Joystick.RumbleType.kRightRumble, (float) rTVal);
         	SmartDashboard.putString("Launch Mode", "Rev-Up");
-        } else if(OI.controller.getRawButton(0) && timLaunch.get() >= 1 && timLaunchAlt.get() == 0) {
+        	mode = false;
+        } else if(OI.controller.getRawButton(1) && timLaunch.get() >= 1 && timLaunchAlt.get() == 0) {
         	timLaunch.stop();
         	timLaunchAlt.start();
         	timLaunch.reset();
-        	launchDrive.set(1);
         	SmartDashboard.putString("Launch Mode", "Max Speed");
+        	mode = true;
         }
+        if (mode){
+        	launchDrive.set(-rTVal);
+        	OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) rTVal);
+        	OI.controller.setRumble(Joystick.RumbleType.kRightRumble, (float) rTVal);
+        } else {
+        	launchDrive.set(-1);
+        }
+        */
+        launchDrive.set(-rTVal);
         
         //Compressor controls
         if(!mainCompressor.getPressureSwitchValue()){
@@ -192,9 +205,9 @@ public class Robot extends IterativeRobot {
         
         //Lifter Code
         if(OI.controller.getPOV() == 180){
-        	liftDrive.set(-1);
+        	liftDrive.set(-.5);
         } else if(OI.controller.getPOV() == 0) {
-        	liftDrive.set(1);
+        	liftDrive.set(.75);
         } else {
         	liftDrive.set(0);
         }
