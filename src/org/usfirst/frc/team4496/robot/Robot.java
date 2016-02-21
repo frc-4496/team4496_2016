@@ -129,10 +129,7 @@ public class Robot extends IterativeRobot {
         //Getting and rounding the input values
         double lXVal = OI.controller.getRawAxis(0);
         double lYVal = OI.controller.getRawAxis(1);
-        double lTVal = OI.controller.getRawAxis(2);
-        double rTVal = OI.controller.getRawAxis(3);
         double rXVal = OI.controller.getRawAxis(4);
-        double rYVal = OI.controller.getRawAxis(5);
         
         //Slowing the drive by the triggers
         double sumTriggerValue = 20;
@@ -149,7 +146,7 @@ public class Robot extends IterativeRobot {
         SmartDashboard.putNumber("Launcher Timer", timLaunch.get());
         SmartDashboard.putNumber("Alt Launcher Timer", rotDrv);
         SmartDashboard.putNumber("POV Value", OI.controller.getPOV());
-        SmartDashboard.putNumber("Sliding Drive Value", rTVal);
+        SmartDashboard.putNumber("Sliding Drive Value", OI.controller.getRawAxis(3));
         SmartDashboard.putBoolean("Compressor Status", !mainCompressor.getPressureSwitchValue());
         
         //Main drive controls
@@ -158,33 +155,23 @@ public class Robot extends IterativeRobot {
         
         //Launcher Rev-Up/Launch
         /*
-        boolean mode = false;
         SmartDashboard.putNumber("Launch Value", rTVal);
         if (OI.controller.getRawButton(1) && timLaunch.get() == 0 && timLaunchAlt.get() >= 1) {
         	timLaunch.start();
         	timLaunchAlt.stop();
         	timLaunchAlt.reset();
-        	SmartDashboard.putString("Launch Mode", "Rev-Up");
-        	mode = false;
+        	launchDrive.set(0);
+        	SmartDashboard.putString("Fly-wheel is", "Off");
         } else if(OI.controller.getRawButton(1) && timLaunch.get() >= 1 && timLaunchAlt.get() == 0) {
         	timLaunch.stop();
         	timLaunchAlt.start();
         	timLaunch.reset();
-        	SmartDashboard.putString("Launch Mode", "Max Speed");
-        	mode = true;
-        }
-        if (mode){
-        	launchDrive.set(-rTVal);
-        	OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) rTVal);
-        	OI.controller.setRumble(Joystick.RumbleType.kRightRumble, (float) rTVal);
-        } else {
         	launchDrive.set(-1);
-        }
-        */
-        launchDrive.set(-rTVal);
-        OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) rTVal);
-    	OI.controller.setRumble(Joystick.RumbleType.kRightRumble, (float) rTVal);
-        
+        	SmartDashboard.putString("Fly-wheel is", "On");
+        	OI.controller.setRumble(Joystick.RumbleType.kLeftRumble, (float) .5);
+        }*/
+        launchDrive.set(-OI.controller.getRawAxis(3));
+         
         //Compressor controls
         if(!mainCompressor.getPressureSwitchValue()){
         	mainCompressor.start();
